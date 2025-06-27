@@ -18,30 +18,11 @@ import androidx.fragment.app.activityViewModels
 import androidx.gridlayout.widget.GridLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
-
-// TODO: Rename parameter arguments, choose names that match, Pass shared data from MainActivity
-// TODO: Create some kind of start button, makes initial shuffle of dies.
-// TODO: Refactor, tons of code in this fragment, some can probs be moved out or made into functions
-
-// NOTE: Man slår alla tärningar första rundan, sedan får man välja. Gör något som inte tillåter en användare att välja ifall det är första rundan.
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [PlayFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class PlayFragment : Fragment(R.layout.fragment_play) {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
     private val storageViewModel: StorageViewModel by activityViewModels()
+    private val diceViewModel: DiceViewModel by activityViewModels()
     //Stores selected choice
     private var choice: String? = null
-    //DiceHelper class and list to store dices
-    private lateinit var diceViewModel: DiceViewModel
     private lateinit var groupManager: DiceGroupManager
     private lateinit var groupList: List<List<Die>>
     //Counts the amount of throws per round.
@@ -50,7 +31,7 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
     private var totThrowCounter = 0
     //Flag to prevent spinner toast from appearing during init
     private var spinnerInit = true
-
+    private val maxRounds = 10
     //Map of dice vectors, maps value to each image
     private val diceImages = mapOf(
         1 to R.drawable.die_1,
@@ -80,10 +61,6 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
     }
     private fun clearGamesStates(view:View){
         //Resets storage
@@ -109,14 +86,35 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        //Observes the round counter
+        groupManager = DiceGroupManager()
+        setupObservers(view)
+        setupUI(view)
+    }
+
+    private fun setupUI(view:View){
+        initOverlay(view)
+        setRoundText(view)
+        setThrowText(view)
+        setupSpinner(view)
+        setUpButtonListener(view)
+        setupFloatingActionButton(view)
+    }
+
+    /**
+     * Sets up observers for the LiveData objects in the app.
+     * Observers two ViewModels: storageViewModel and diceViewModel.
+     *
+     * @param view - the root view used to access the UI.
+     */
+    private fun setupObservers(view:View){
+        //Observe the round counter to handle progression and game reset logic.
         storageViewModel.roundCounter.observe(viewLifecycleOwner) {
-            roundCount ->
+                roundCount ->
+            // Disable the action button between rounds
             val actionButton: FloatingActionButton = view.findViewById(R.id.floatingActionButton)
             actionButton.isEnabled = false
             groupManager.clearGroups()
-            //should be 10 here, 1 is temp for testing
-            if(roundCount > 1){
+            if(roundCount > maxRounds){
                 //Retrieves all rounds for the game
                 val allRounds = storageViewModel.getRounds()
                 storageViewModel.addGame(allRounds)
@@ -124,43 +122,18 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
                 clearGamesStates(view)
             }
         }
-        diceViewModel = DiceViewModel(requireContext())
+        // Observe changes in the dice list and re-render the dice grid when needed.
         diceViewModel.diceList.observe(viewLifecycleOwner){ diceList ->
             addDicesToGrid(view, diceList)
         }
-        //TODO: Remove this, create listener for diceList since its livedata
-        //diceList = diceViewModel.diceList
-        groupManager = DiceGroupManager()
-        initOverlay(view)
-        setRoundText(view)
-        setThrowText(view)
-        setupSpinner(view)
-        setUpButtonListener(view)
-        setupFloatingActionButton(view)
-
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment PlayFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            PlayFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
-    }
-
-    //Inits the overlay, pressing the start button removes the overlay and rolls the dices
+    /**
+     * Initializes the game's start overlay.
+     * Hides the overlay and triggers the first dice roll when the start button is pressed.
+     *
+     * @param view The root view used to access UI elements.
+     */
     private fun initOverlay(view:View){
         val overlay:FrameLayout = view.findViewById(R.id.gameOverlay)
         val startButton: Button =  view.findViewById(R.id.startGameButton)
@@ -171,45 +144,44 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
 
         }
     }
+
+    /**
+     * Sets up the listener for the floating action button used to
+     * lock in a group of dice. Handles:
+     * - Collecting paired dice that have not been paired yet.
+     * - Validating the group of dice based on the selected scoring choice.
+     */
     private fun setupFloatingActionButton(view:View){
         val fButton: FloatingActionButton = view.findViewById(R.id.floatingActionButton)
         fButton.setOnClickListener{
-            //Iterate through diceList, find paired dice
             val pairedDices = mutableListOf<Die>()
-            //Makes it searchable
             val prevGroupedDices: Set<Die> = groupManager.getGroups().flatten().toSet()
-            Log.d("GroupDebug", "Grouped dice this round: ${prevGroupedDices.size}")
             val diceList = diceViewModel.diceList.value ?: emptyList()
+            // Collect all newly paired dice
             for(die in diceList){
                 if(die.isPaired && die !in prevGroupedDices){
-                    //Add to pair dice pair thingy
                     pairedDices.add(die)
-                    //Reset the die state DO THIS IN VIEWMODEL
-                    //die.isPaired = false
-                    //diceViewModel.togglePairedState(die)
-                    Log.d("PairedDice", "Found paired die: $die")
-
                 }
             }
             val groupSum = pairedDices.sumOf { it.value }
-            Log.d("ChoiceDebug", "Current choice: $choice")
+            // Sets the score limit
             val scoreLimit = when(choice) {
                 "LOW" -> 3
                 else -> choice?.toInt() ?: 0
             }
+            // Sets a boolean used to check whether a selected group is valid or not
             val isValidGroup = when(choice) {
+                // "LOW" allows all groups smaller or equal to three
                 "LOW" -> pairedDices.all{ it.value <= 3 }
                 else -> groupSum == scoreLimit
             }
-            //Exits the listener if the user has submitted a group that is not allowed
+            // Exits the listener and displays an error-toast if the group is not valid
             if(!isValidGroup){
-                Log.d("PairedDice", "Not valid group! Value of group: $groupSum Score Limit: $scoreLimit")
                 Toast.makeText(requireContext(), "Illegal grouping!", Toast.LENGTH_SHORT).show()
                 diceViewModel.resetGroupDices(pairedDices)
                 return@setOnClickListener
             }
-            Log.d("PairedDice", "Group dice values: ${pairedDices.map { it.value }}")
-            //Adds a copy to group manager, prevents it from being cleared
+            // Add group and update dice states
             groupManager.addGroup(pairedDices.toList())
             diceViewModel.groupDices(pairedDices)
             val diceGroups = groupManager.getGroups()
@@ -270,52 +242,14 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
        spinner.alpha = 0.5f
        spinner.isEnabled = false
        button.isEnabled = true
-       //TODO: This works but can probably be made more understandable
        button.setOnClickListener {
            when {
                throwCounter < 2 -> {
-                   throwCounter++
-                   totThrowCounter++
-                   diceViewModel.rollSelectedDice()
-                   setRoundText(view)
-                   setThrowText(view)
-
-                   if(throwCounter == 2){
-                       spinner.alpha = 1.0f
-                       spinner.isEnabled = true
-                       button.isEnabled = false
-                       button.text = "Score Round"
-                       groupList = groupManager.getGroups()
-                       Log.d("GroupLog", "Number of groups: ${groupList.size}")
-                       Toast.makeText(requireContext(), "Select a scoring option", Toast.LENGTH_SHORT).show()
-                       choice = spinner.selectedItem as String
-                   }
+                   throwDice(view, spinner, button)
                }
                //Scores the round
                throwCounter == 2 && choice != null -> {
-                   //Group of dices to be scored
-                   val diceGroup = groupManager.getGroups()
-                   val score = ScoringManager.scoreRound(diceGroup,choice.toString())
-                   Log.d("ScoreLog", "Score for round: $score")
-                   val round = Round(choice = choice.toString(), score = score, diceGroup) // Replace with real scoring
-                   storageViewModel.addRound(round)
-                   storageViewModel.incrementRoundCounter()
-                   storageViewModel.addChoice(choice.toString())
-                   //TODO: Throw dices here also, runda 7 -> 18
-                   // Reset
-                   throwCounter = 0
-                   choice = null
-                   diceViewModel.resetAllDice()
-                   //Rerolls all dice after each round
-                   diceViewModel.rollAllDice()
-                   spinner.alpha = 0.5f
-                   spinner.isEnabled = false
-                   button.text = "Throw"
-                   button.isEnabled = true
-
-                   setupSpinner(view)
-                   setRoundText(view)
-                   setThrowText(view)
+                   scoreRound(view, spinner, button)
                }
            }
        }
@@ -325,7 +259,6 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
     private fun addDicesToGrid(view:View, diceList:List<Die>){
        val grid: GridLayout = view.findViewById(R.id.diceGrid)
         grid.removeAllViews()
-       //TODO: Rename i to something more readable
        diceList.forEachIndexed {index, die ->
            val imgView = ImageView(requireContext())
            //sets image resource based on what state is selected
@@ -349,8 +282,50 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
        val current = storageViewModel.roundCounter.value ?: 0
        roundText.text = getString(R.string.round_text, current, throwCounter)
     }
+
     private fun setThrowText(view:View){
        val throwText : TextView = view.findViewById(R.id.throwText)
        throwText.text = getString(R.string.currThrows_text, totThrowCounter)
+    }
+
+    private fun throwDice(view:View, spinner: Spinner, button: Button){
+        throwCounter++
+        totThrowCounter++
+        diceViewModel.rollSelectedDice()
+        setRoundText(view)
+        setThrowText(view)
+
+        if(throwCounter == 2){
+            spinner.alpha = 1.0f
+            spinner.isEnabled = true
+            button.isEnabled = false
+            button.text = "Score Round"
+            groupList = groupManager.getGroups()
+            Toast.makeText(requireContext(), "Select a scoring option", Toast.LENGTH_SHORT).show()
+            choice = spinner.selectedItem as String
+        }
+    }
+
+    private fun scoreRound(view: View,spinner: Spinner,button: Button){
+        //Group of dices to be scored
+        val diceGroup = groupManager.getGroups()
+        val score = ScoringManager.scoreRound(diceGroup,choice.toString())
+        val round = Round(choice = choice.toString(), score = score, diceGroup) // Replace with real scoring
+        storageViewModel.addRound(round)
+        storageViewModel.incrementRoundCounter()
+        storageViewModel.addChoice(choice.toString())
+        throwCounter = 0
+        choice = null
+        diceViewModel.resetAllDice()
+        //Rerolls all dice after each round
+        diceViewModel.rollAllDice()
+        spinner.alpha = 0.5f
+        spinner.isEnabled = false
+        button.text = "Throw"
+        button.isEnabled = true
+
+        setupSpinner(view)
+        setRoundText(view)
+        setThrowText(view)
     }
 }

@@ -1,16 +1,24 @@
 package se.umu.cs.ens20vck.lab1_thirtythrows
 
-import android.content.Context
-import android.widget.ImageView
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
 //Helper class for the dice, creates initial dice list and rolls the dice
-class DiceViewModel(context: Context) {
+/**
+ * ViewModel class that manages the list of dice used in game.
+ * Initializes the dice list, handles rolling and state changes.
+ *
+ * @author Viktor Carrick (ens20vck@cs.umu.se)
+ */
+class DiceViewModel: ViewModel() {
+    // Mutable live data list of dice
     private val _diceList = MutableLiveData<List<Die>>()
+
+    // Immutable list of dice for observation
     val diceList: LiveData<List<Die>> = _diceList
 
+    // Initiates the list of dice, assigns a value and unique id for each die
     init {
         val initDiceList = mutableListOf<Die>()
         for(i in 1..6){
@@ -20,7 +28,10 @@ class DiceViewModel(context: Context) {
         _diceList.value = initDiceList
     }
 
-
+    /**
+     * Rolls all dice in the list by assigning a random value
+     * from 1 to 6. Resets the selected state for each die.
+     */
     fun rollAllDice(){
         val diceListCopy = _diceList.value.orEmpty()
         val updatedDiceList = diceListCopy.map { die ->
@@ -32,7 +43,10 @@ class DiceViewModel(context: Context) {
         _diceList.value = updatedDiceList
     }
 
-    //Rolls a selected die
+    /**
+     * Rolls only the dice currently marked as selected.
+     * Resets the selected state for each rolled dice.
+     */
     fun rollSelectedDice(){
         val diceListCopy = _diceList.value.orEmpty()
         val updatedSelectedDiceList = diceListCopy.map { die ->
@@ -46,6 +60,14 @@ class DiceViewModel(context: Context) {
         _diceList.value = updatedSelectedDiceList
     }
 
+    /**
+     * Toggles the state of a die based on the current throw.
+     * If the throw is 0 or 1: isSelected is toggled.
+     * If the throw is 2: isPaired is toggled.
+     *
+     * @param index - index of the die to toggle.
+     * @param throwCounter - indicates what throw the user is on.
+     */
     fun toggleDiceState(index:Int, throwCounter: Int){
         val updateDiceList = _diceList.value.orEmpty().mapIndexed() { i, die ->
             if(i==index){
@@ -59,6 +81,11 @@ class DiceViewModel(context: Context) {
         _diceList.value = updateDiceList
     }
 
+    /**
+     * Marks the given dice as paired/grouped for scoring.
+     *
+     * @param diceGroup - List of dice to mark
+     */
     fun groupDices(diceGroup:List<Die>){
         val updateDiceList = _diceList.value.orEmpty().map { die ->
             if(diceGroup.any { it.id ==  die.id }) { die.copy(isPaired = true) }
@@ -67,6 +94,11 @@ class DiceViewModel(context: Context) {
         _diceList.value = updateDiceList
     }
 
+    /**
+     * Unmarks the given dice from being paired.
+     *
+     * @param diceToReset - List of dice to unpair.
+     */
     fun resetGroupDices(diceToReset:List<Die>){
         val updateDiceList = _diceList.value.orEmpty().map { die ->
             if(diceToReset.any { it.id == die.id }) { die.copy(isPaired = false) }
@@ -75,6 +107,11 @@ class DiceViewModel(context: Context) {
         _diceList.value = updateDiceList
     }
 
+    /**
+     * Marks dice as paired if they exist in any group from the provided list.
+     *
+     * @param groupList - a list of diceGroups
+     */
     fun syncGroupedDice(groupList:List<List<Die>>){
         val group = groupList.flatten().toSet()
         val updateDiceList = _diceList.value.orEmpty().map { die ->
@@ -84,6 +121,9 @@ class DiceViewModel(context: Context) {
         _diceList.value = updateDiceList
     }
 
+    /**
+     * Resets all dice by clearing their selected and paired states.
+     */
     fun resetAllDice(){
         _diceList.value = _diceList.value.orEmpty().map { die ->
             die.copy(isSelected = false, isPaired = false)
