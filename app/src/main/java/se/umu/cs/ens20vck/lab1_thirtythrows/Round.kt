@@ -2,6 +2,8 @@ package se.umu.cs.ens20vck.lab1_thirtythrows
 
 /**
  * Model class representing a round in the game.
+ *
+ * @author Viktor Carrick (ens20vck@cs.umu.se)
  */
 data class Round(
     //The scoring choice selected by the user

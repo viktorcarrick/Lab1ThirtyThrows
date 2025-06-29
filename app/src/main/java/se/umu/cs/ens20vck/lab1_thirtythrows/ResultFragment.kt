@@ -13,31 +13,17 @@ import android.widget.TableRow
 import android.widget.TextView
 import androidx.fragment.app.activityViewModels
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
 /**
- * A simple [Fragment] subclass.
- * Use the [ResultFragment.newInstance] factory method to
- * create an instance of this fragment.
+ * Fragment class that displays the results from each game in
+ * a table format, creates one table per game.
+ *
+ * @author Viktor Carrick (ens20vck@cs.umu.se)
  */
-
-//TODO: Add final row to table, should contain the total score for each game
 class ResultFragment : Fragment() {
-    //Data class
     private val storageViewModel: StorageViewModel by activityViewModels()
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
     }
 
     override fun onCreateView(
@@ -48,18 +34,25 @@ class ResultFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_result, container, false)
     }
 
+    /**
+     * Creates and populates a table per game when the view is created.
+     * Defines what background colors are used for the table rows and retrieves
+     * game data from the storage ViewModel.
+     *
+     * @param view - the root view of the fragment.
+     * @param savedInstanceState - saved state of the fragment (if available).
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val tableContainer: LinearLayout = view.findViewById(R.id.tableContainer)
         val lightPurple = Color.parseColor("#E6E0F8")
         val lightGray = Color.parseColor("#E0E0E0")
-        //Retrieve game data
+        // Retrieve game data from storage
         val gameData = storageViewModel.getGames()
         for ((gameIndex, gameRounds) in gameData.withIndex()) {
-            //Header for table
+            // Sets header for table
             val tableHeader = TextView(requireContext()).apply{
-                //TODO: Move into string resource
-                text = "Game ${gameIndex + 1}"
+                text = getString(R.string.results_table_header,gameIndex + 1)
                 setTypeface(typeface, Typeface.BOLD)
                 textSize = 18f
                 setPadding(16,32,16,16)
@@ -75,10 +68,9 @@ class ResultFragment : Fragment() {
                 isStretchAllColumns = true
             }
 
-            //Table header
             setTableHeader(tableLayout,lightPurple)
-            //add rows
             addRows(gameRounds, tableLayout, lightGray, lightPurple)
+            // Add the sum row last
             addSumRow(gameRounds,tableLayout)
             tableContainer.addView(tableLayout)
         }
@@ -86,6 +78,13 @@ class ResultFragment : Fragment() {
 
     }
 
+    /**
+     * Adds a header row to the given table with column titles
+     * "Round", "Choice" and "Score".
+     *
+     * @param tableLayout - the table to which the header row will be added.
+     * @param color - the background color for the header header row.
+     */
     private fun setTableHeader(tableLayout: TableLayout, color: Int){
         val tableHeaderRow = TableRow(requireContext())
         val headers = listOf("Round", "Choice", "Score")
@@ -100,14 +99,23 @@ class ResultFragment : Fragment() {
         }
         tableLayout.addView(tableHeaderRow)
     }
-    //Function that adds rows and fills them with game data
+
+    /**
+     * Adds rows with game result data to the given table.
+     * Each row alternates between two background colors.
+     *
+     * @param list - the list of Round objects representing a game's data.
+     * @param tableLayout - the table to which the rows will be added.
+     * @param color1 - background color for even-numbered rows.
+     * @param color2 - background color for odd-numbered rows.
+     */
     private fun addRows(list:List<Round>, tableLayout: TableLayout, color1: Int, color2: Int){
         for((roundIndex, round) in list.withIndex()){
             val row = TableRow(requireContext())
             val rowColor = if (roundIndex % 2 == 0) color1 else color2
             row.setBackgroundColor(rowColor)
             val cells = listOf(
-                "Round ${roundIndex + 1}",
+                getString(R.string.results_round_text, roundIndex + 1),
                 round.choice,
                 round.score
             )
@@ -122,11 +130,15 @@ class ResultFragment : Fragment() {
         }
     }
 
-
+    /**
+     * Adds a row containing the total score for a game to the given table.
+     *
+     * @param tableLayout - the table that the row gets added to.
+     */
     private fun addSumRow(list:List<Round>, tableLayout: TableLayout){
         val totScore = ScoringManager.sumScores(list)
-        var sumRow = TableRow(requireContext())
-        var sumCells = listOf(
+        val sumRow = TableRow(requireContext())
+        val sumCells = listOf(
             "Total Score",
             "",
             totScore
@@ -143,23 +155,4 @@ class ResultFragment : Fragment() {
         tableLayout.addView(sumRow)
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment ResultFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            ResultFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
-    }
 }

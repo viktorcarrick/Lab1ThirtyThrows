@@ -1,16 +1,15 @@
 package se.umu.cs.ens20vck.lab1_thirtythrows
 
-import android.util.Log
-
 /**
  * Utility class, manages the scoring logic in the game.
  * Provides methods to:
  *  - Calculate the score for a single round.
  *  - Sum up the total scores from all rounds in a game.
+ *
+ *  @author Viktor Carrick (ens20vck@cs.umu.se)
  */
 class ScoringManager {
     companion object {
-        //TODO: Refactor can be made much shorter
         /**
          * Calculates the score for a single round. The scoring is calculated based
          * on the user's selected scoring option.
@@ -20,16 +19,13 @@ class ScoringManager {
          * @return - The calculated score for a round
          */
         fun scoreRound(groupList: List<List<Die>>, choice: String):Int{
-            Log.d("ScoreRound", "Choice: $choice list of dice ${groupList.size}")
             //Sets the choice to 3 if the user has selected the "LOW" option
             val selectedChoice = if(choice == "LOW"){
                 3
             } else{
                 choice.toIntOrNull()?:0
             }
-            groupList.forEachIndexed { index, group ->
-                Log.d("ScoreRound", "Group $index: ${group.map { it.value }}")
-            }
+            // Set the score based on the selected scoring choice
             val score = when(selectedChoice){
                 3 -> {
                     groupList.flatten()
@@ -37,14 +33,12 @@ class ScoringManager {
                         .sumOf { it.value }
                 }
                 in 4..12 -> {
-                    Log.d("ScoreRound", "In ...12")
                     groupList.flatten()
                         .sumOf { it.value }
                 }
                 //Fallback if all fails
                 else -> 0
             }
-            Log.d("ScoreRound", "Score: $score")
             return score
         }
 

@@ -1,7 +1,6 @@
 package se.umu.cs.ens20vck.lab1_thirtythrows
 
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -18,11 +17,21 @@ import androidx.fragment.app.activityViewModels
 import androidx.gridlayout.widget.GridLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
+/**
+ * Fragment responsible for the managing user interaction during gameplay.
+ *  - Handles dice rolling, grouping and scoring using ViewModels and utility classes.
+ *  - Updates UI components based on user actions and game state.
+ *
+ * @author Viktor Carrick (ens20vck@cs.umu.se)
+ */
 class PlayFragment : Fragment(R.layout.fragment_play) {
+    // ViewModel storing rounds, completed games and choices across fragments.
     private val storageViewModel: StorageViewModel by activityViewModels()
+    // ViewModel storing dice and their internal states
     private val diceViewModel: DiceViewModel by activityViewModels()
     //Stores selected choice
     private var choice: String? = null
+    // Manages groups of dice
     private lateinit var groupManager: DiceGroupManager
     private lateinit var groupList: List<List<Die>>
     //Counts the amount of throws per round.
@@ -32,7 +41,8 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
     //Flag to prevent spinner toast from appearing during init
     private var spinnerInit = true
     private val maxRounds = 10
-    //Map of dice vectors, maps value to each image
+
+    // Maps dice values to image resources for normal state
     private val diceImages = mapOf(
         1 to R.drawable.die_1,
         2 to R.drawable.die_2,
@@ -41,6 +51,7 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
         5 to R.drawable.die_5,
         6 to R.drawable.die_6,
     )
+    // Maps dice values to image resources for selected state
     private val selectedDiceImages = mapOf(
         1 to R.drawable.red_die_1,
         2 to R.drawable.red_die_2,
@@ -49,7 +60,7 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
         5 to R.drawable.red_die_5,
         6 to R.drawable.red_die_6,
     )
-
+    // Maps dice values to image resources for grouped state
     private val pairedDiceImages = mapOf(
         1 to R.drawable.gray_die_1,
         2 to R.drawable.gray_die_2,
@@ -62,20 +73,7 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
-    private fun clearGamesStates(view:View){
-        //Resets storage
-        storageViewModel.clearRounds()
-        storageViewModel.resetRoundCounter()
-        storageViewModel.clearChoices()
 
-        throwCounter = 0
-        totThrowCounter = 0
-        choice = null
-        diceViewModel.resetAllDice()
-        setRoundText(view)
-        setThrowText(view)
-
-    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -91,6 +89,27 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
         setupUI(view)
     }
 
+    /**
+     * Resets game state, dice states and the UI
+     */
+    private fun clearGamesStates(view:View){
+        //Resets storage
+        storageViewModel.clearRounds()
+        storageViewModel.resetRoundCounter()
+        storageViewModel.clearChoices()
+
+        throwCounter = 0
+        totThrowCounter = 0
+        choice = null
+        diceViewModel.resetAllDice()
+        setRoundText(view)
+        setThrowText(view)
+
+    }
+
+    /**
+     * Sets up the UI elements and their intial states.
+     */
     private fun setupUI(view:View){
         initOverlay(view)
         setRoundText(view)
@@ -101,7 +120,7 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
     }
 
     /**
-     * Sets up observers for the LiveData objects in the app.
+     * Sets up observers for the LiveData objects in the app, reacts to data changes in the ViewModels.
      * Observers two ViewModels: storageViewModel and diceViewModel.
      *
      * @param view - the root view used to access the UI.
@@ -150,10 +169,12 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
      * lock in a group of dice. Handles:
      * - Collecting paired dice that have not been paired yet.
      * - Validating the group of dice based on the selected scoring choice.
+     *
+     *  @param view The root view used to access UI elements.
      */
     private fun setupFloatingActionButton(view:View){
-        val fButton: FloatingActionButton = view.findViewById(R.id.floatingActionButton)
-        fButton.setOnClickListener{
+        val floatingButton: FloatingActionButton = view.findViewById(R.id.floatingActionButton)
+        floatingButton.setOnClickListener{
             val pairedDices = mutableListOf<Die>()
             val prevGroupedDices: Set<Die> = groupManager.getGroups().flatten().toSet()
             val diceList = diceViewModel.diceList.value ?: emptyList()
@@ -188,30 +209,42 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
             diceViewModel.syncGroupedDice(diceGroups)
             pairedDices.clear()
         }
-        fButton.isEnabled = false
+        floatingButton.isEnabled = false
     }
 
-    //Populates the spinner with the different choices. Does not populate it with already selected choices
-    //Creates an arrayAdapter to populate
+    /**
+     * Sets up the spinner containing scoring choices. Populates the spinner
+     * with unused scoring choices for the current game.
+     *
+     * @param view - The root view used to access UI elements.
+     */
     private fun setupSpinner(view: View){
        val spinner: Spinner = view.findViewById(R.id.spinner)
        val allChoices = resources.getStringArray(R.array.choice_array).toList()
        val usedChoices = storageViewModel.getUsedChoices()
+        // Filter used choices
        val availableChoices = allChoices.filterNot { usedChoices.contains(it) }
+        // Populate spinner via an adapter
        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, availableChoices)
        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
        spinner.adapter = adapter
        val button: Button = view.findViewById(R.id.button3)
        val actionButton: FloatingActionButton = view.findViewById(R.id.floatingActionButton)
-       setupSpinnerListener(spinner,view,button, actionButton)
+       setupSpinnerListener(spinner,button, actionButton)
     }
 
-    //Adds listener to spinner
-    //Disable the spinner until the third throw has been made, then send the score after selecting option from spinner
-    private fun setupSpinnerListener(spinner: Spinner, view: View, button: Button, actionButton: FloatingActionButton){
+    /**
+     * Adds a listener to spinner to handle user selection.
+     * Enables UI control after the third throw.
+     *
+     * @param spinner - the spinner used to select a scoring option.
+     * @param button - the button used to score the round.
+     * @param floatingButton - the FloatingActionButton used to group paired dice.
+     */
+    private fun setupSpinnerListener(spinner: Spinner, button: Button, floatingButton: FloatingActionButton){
        spinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
            override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
-               //Prevents the toast from being shown on launch
+               // Prevent the toast from being shown on launch
                if(spinnerInit){
                    spinnerInit = false
                    return
@@ -219,22 +252,26 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
                if(throwCounter == 2){
                    choice = parent.getItemAtPosition(pos) as String
                    Toast.makeText(requireContext(), "Group dices", Toast.LENGTH_SHORT).show()
-                   //Enables the button
+                   // Enable the button
                    button.isEnabled = true
-                   actionButton.isEnabled = true
+                   floatingButton.isEnabled = true
 
                }
            }
 
            override fun onNothingSelected(parent: AdapterView<*>) {
                button.isEnabled = false
-               actionButton.isEnabled = false
+               floatingButton.isEnabled = false
            }
        }
     }
 
-    //Adds listener to button
-    //The user should be able to do three throws, before the round is created -> track button clicks?
+    /**
+     * Adds a listener to the throw/score button to handle dice throws
+     * and round scoring. Enables scoring after three throws.
+     *
+     * @param view - The root view used to access UI elements.
+     */
     private fun setUpButtonListener(view:View){
        val button: Button = view.findViewById(R.id.button3)
        val spinner: Spinner = view.findViewById(R.id.spinner)
@@ -255,13 +292,18 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
        }
     }
 
-    //Adds dice to the fragment, vector is selected based on each dice-value in the given list.
+    /**
+     * Updates the dice grid in the UI with images and click listener.
+     *
+     * @param view - The root view used to access UI elements.
+     */
     private fun addDicesToGrid(view:View, diceList:List<Die>){
        val grid: GridLayout = view.findViewById(R.id.diceGrid)
+        // Clear the grid before updating
         grid.removeAllViews()
        diceList.forEachIndexed {index, die ->
            val imgView = ImageView(requireContext())
-           //sets image resource based on what state is selected
+           // Set image resource based on state of dice
            val resId = when {
                die.isPaired -> pairedDiceImages[die.value]?: R.drawable.gray_die_0
                die.isSelected -> selectedDiceImages[die.value]?: R.drawable.red_die_0
@@ -269,25 +311,42 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
            }
            imgView.setImageResource(resId)
            imgView.setOnClickListener {
-               //toggle selected paired based on throwCounter
+               // Toggle what state is selected based on the throw xounter
                diceViewModel.toggleDiceState(index, throwCounter)
            }
            grid.addView(imgView)
        }
     }
 
-
+    /**
+     * Updates the UI text showing the current round and what throw the user is on.
+     *
+     * @param view - The root view used to access UI elements.
+     */
     private fun setRoundText(view:View){
        val roundText : TextView = view.findViewById(R.id.roundText)
        val current = storageViewModel.roundCounter.value ?: 0
        roundText.text = getString(R.string.round_text, current, throwCounter)
     }
 
+    /**
+     * Updates the UI text showing the total amount of throws in the game.
+     *
+     * @param view - The root view used to access UI elements.
+     */
     private fun setThrowText(view:View){
        val throwText : TextView = view.findViewById(R.id.throwText)
        throwText.text = getString(R.string.currThrows_text, totThrowCounter)
     }
 
+    /**
+     * Handles dice throwing logic, rolls the selected dice and updates the UI.
+     * The throwing logic is handled by diceViewModel.
+     *
+     * @param view - The root view used to access UI elements.
+     * @param spinner - the spinner used to select a scoring option.
+     * @param button - the button used to score the round.
+     */
     private fun throwDice(view:View, spinner: Spinner, button: Button){
         throwCounter++
         totThrowCounter++
@@ -298,6 +357,7 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
         if(throwCounter == 2){
             spinner.alpha = 1.0f
             spinner.isEnabled = true
+            // Button is disabled until a scoring choice has been made
             button.isEnabled = false
             button.text = "Score Round"
             groupList = groupManager.getGroups()
@@ -306,14 +366,24 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
         }
     }
 
+    /**
+     * Scores the current round based on the grouped dice and the selected
+     * scoring choice. Resets UI and game state for the next round.
+     * The scoring is handled by the ScoringManager-class.
+     *
+     * @param view - The root view used to access UI elements.
+     * @param spinner - the spinner used to select a scoring option.
+     * @param button - the button used to score the round.
+     */
     private fun scoreRound(view: View,spinner: Spinner,button: Button){
         //Group of dices to be scored
         val diceGroup = groupManager.getGroups()
         val score = ScoringManager.scoreRound(diceGroup,choice.toString())
-        val round = Round(choice = choice.toString(), score = score, diceGroup) // Replace with real scoring
+        val round = Round(choice = choice.toString(), score = score, diceGroup)
         storageViewModel.addRound(round)
         storageViewModel.incrementRoundCounter()
         storageViewModel.addChoice(choice.toString())
+        // Reset game states
         throwCounter = 0
         choice = null
         diceViewModel.resetAllDice()

@@ -2,6 +2,8 @@ package se.umu.cs.ens20vck.lab1_thirtythrows
 
 /**
  * Model class, represents a die in the application.
+ *
+ * @author Viktor Carrick (ens20vck@cs.umu.se)
  */
 data class Die(
     //Identifier

@@ -9,11 +9,18 @@ import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.tabs.TabLayout
 import androidx.activity.viewModels
 
-//TODO: Create two models or one, implement game and have some model for results.
-//      This Activity provides both models, Play updates results Result reads from it
-//      The model should be created here so its shared between the two fragments
+/**
+ * Main activity, that hosts the Play and Result fragments,
+ * manages the shared storage ViewModel and sets up the tab navigation
+ * and UI.
+ *
+ * @author Viktor Carrick (ens20vck@cs.umu.se)
+ */
 class MainActivity : AppCompatActivity() {
-    //Storage model, stores rounds, completed games etc
+    /**
+     * Shared ViewModel, stores game data.
+     * Scoped to this activity so that the fragments can share the same instance.
+     */
     val storageViewModel: StorageViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,6 +36,18 @@ class MainActivity : AppCompatActivity() {
         val textView = findViewById<TextView>(R.id.textView)
         textView.text = mainText
 
+        // Sets up the tab navigation listeners
+        setUpTab()
+
+        //Loads the play fragment on init, works as a start page
+        showPlayFragment()
+    }
+
+    /**
+     * Sets up the TabLayout listener to switch between
+     * the Play and Result fragments based on tab selection.
+     */
+    private fun setUpTab(){
         //Attaches listener to the tab
         val tab = findViewById<TabLayout>(R.id.tabLayout)
         tab.addOnTabSelectedListener(object: TabLayout.OnTabSelectedListener{
@@ -36,33 +55,35 @@ class MainActivity : AppCompatActivity() {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 //Start the play fragment when Play is selected
                 if(tab.text?.equals("Play") == true){
-                    val playFragment = PlayFragment()
-                    //Shows the fragment
-                    supportFragmentManager.beginTransaction()
-                        .replace(R.id.fragmentContainer, playFragment)
-                        .commit()
+                    showPlayFragment()
                 }
                 //Start result fragment when View Results is selected
                 else if(tab.text?.equals("View Results") == true) {
-                    val resFragment = ResultFragment()
-                    supportFragmentManager.beginTransaction()
-                        .replace(R.id.fragmentContainer, resFragment)
-                        .commit()
+                    showResultFragment()
                 }
             }
 
-            override fun onTabUnselected(tab: TabLayout.Tab) {
-                // Optional: Do something when a tab is unselected
-            }
-
-            override fun onTabReselected(tab: TabLayout.Tab) {
-                // Optional: Do something when a tab is reselected
-            }
+            override fun onTabUnselected(tab: TabLayout.Tab) {}
+            override fun onTabReselected(tab: TabLayout.Tab) {}
         })
+    }
 
-        //Loads the play fragment on init, works as a startpage
+    /**
+     * Replaces the fragment container with the Play fragment.
+     */
+    private fun showPlayFragment(){
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, PlayFragment())
+            .commit()
+    }
+
+
+    /**
+     * Replaces the fragment container with the Result fragment.
+     */
+    private fun showResultFragment(){
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, ResultFragment())
             .commit()
     }
 }
