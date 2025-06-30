@@ -1,8 +1,9 @@
-package se.umu.cs.ens20vck.lab1_thirtythrows
+package se.umu.cs.ens20vck.lab1_thirtythrows.viewModels
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import se.umu.cs.ens20vck.lab1_thirtythrows.dataModels.Die
 
 //Helper class for the dice, creates initial dice list and rolls the dice
 /**
@@ -130,7 +131,7 @@ class DiceViewModel: ViewModel() {
         }
     }
 
-    fun togglePairedState(targetDie:Die){
+    fun togglePairedState(targetDie: Die){
         val updateDiceList = _diceList.value.orEmpty().map { die ->
             if(die == targetDie){ die.copy(isPaired = !die.isPaired)}
             else { die }

@@ -1,7 +1,7 @@
-package se.umu.cs.ens20vck.lab1_thirtythrows
+package se.umu.cs.ens20vck.lab1_thirtythrows.dataModels
 
 /**
- * Model class, represents a die in the application.
+ * Model class, represents a die in the game.
  *
  * @author Viktor Carrick (ens20vck@cs.umu.se)
  */

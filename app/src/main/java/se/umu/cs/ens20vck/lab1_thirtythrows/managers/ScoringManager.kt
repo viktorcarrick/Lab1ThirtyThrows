@@ -1,4 +1,7 @@
-package se.umu.cs.ens20vck.lab1_thirtythrows
+package se.umu.cs.ens20vck.lab1_thirtythrows.managers
+
+import se.umu.cs.ens20vck.lab1_thirtythrows.dataModels.Die
+import se.umu.cs.ens20vck.lab1_thirtythrows.dataModels.Round
 
 /**
  * Utility class, manages the scoring logic in the game.

@@ -1,4 +1,4 @@
-package se.umu.cs.ens20vck.lab1_thirtythrows
+package se.umu.cs.ens20vck.lab1_thirtythrows.fragments
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -16,6 +16,13 @@ import android.widget.Toast
 import androidx.fragment.app.activityViewModels
 import androidx.gridlayout.widget.GridLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import se.umu.cs.ens20vck.lab1_thirtythrows.managers.DiceGroupManager
+import se.umu.cs.ens20vck.lab1_thirtythrows.viewModels.DiceViewModel
+import se.umu.cs.ens20vck.lab1_thirtythrows.dataModels.Die
+import se.umu.cs.ens20vck.lab1_thirtythrows.R
+import se.umu.cs.ens20vck.lab1_thirtythrows.dataModels.Round
+import se.umu.cs.ens20vck.lab1_thirtythrows.managers.ScoringManager
+import se.umu.cs.ens20vck.lab1_thirtythrows.viewModels.StorageViewModel
 
 /**
  * Fragment responsible for the managing user interaction during gameplay.
@@ -378,7 +385,7 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
     private fun scoreRound(view: View,spinner: Spinner,button: Button){
         //Group of dices to be scored
         val diceGroup = groupManager.getGroups()
-        val score = ScoringManager.scoreRound(diceGroup,choice.toString())
+        val score = ScoringManager.scoreRound(diceGroup, choice.toString())
         val round = Round(choice = choice.toString(), score = score, diceGroup)
         storageViewModel.addRound(round)
         storageViewModel.incrementRoundCounter()

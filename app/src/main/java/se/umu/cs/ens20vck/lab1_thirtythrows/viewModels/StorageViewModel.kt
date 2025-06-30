@@ -1,8 +1,9 @@
-package se.umu.cs.ens20vck.lab1_thirtythrows
+package se.umu.cs.ens20vck.lab1_thirtythrows.viewModels
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import se.umu.cs.ens20vck.lab1_thirtythrows.dataModels.Round
 
 /**
  * ViewModel class that acts as a shared storage across the application.

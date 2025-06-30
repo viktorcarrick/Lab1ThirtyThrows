@@ -1,4 +1,4 @@
-package se.umu.cs.ens20vck.lab1_thirtythrows
+package se.umu.cs.ens20vck.lab1_thirtythrows.fragments
 
 import android.graphics.Color
 import android.graphics.Typeface
@@ -12,6 +12,10 @@ import android.widget.TableLayout
 import android.widget.TableRow
 import android.widget.TextView
 import androidx.fragment.app.activityViewModels
+import se.umu.cs.ens20vck.lab1_thirtythrows.R
+import se.umu.cs.ens20vck.lab1_thirtythrows.dataModels.Round
+import se.umu.cs.ens20vck.lab1_thirtythrows.managers.ScoringManager
+import se.umu.cs.ens20vck.lab1_thirtythrows.viewModels.StorageViewModel
 
 /**
  * Fragment class that displays the results from each game in

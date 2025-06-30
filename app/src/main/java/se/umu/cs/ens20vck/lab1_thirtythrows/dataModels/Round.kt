@@ -1,4 +1,4 @@
-package se.umu.cs.ens20vck.lab1_thirtythrows
+package se.umu.cs.ens20vck.lab1_thirtythrows.dataModels
 
 /**
  * Model class representing a round in the game.

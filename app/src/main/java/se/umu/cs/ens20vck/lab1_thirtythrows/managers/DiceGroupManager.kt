@@ -1,4 +1,6 @@
-package se.umu.cs.ens20vck.lab1_thirtythrows
+package se.umu.cs.ens20vck.lab1_thirtythrows.managers
+
+import se.umu.cs.ens20vck.lab1_thirtythrows.dataModels.Die
 
 /**
  * Model class, acts as a helper class for grouping selected dice.

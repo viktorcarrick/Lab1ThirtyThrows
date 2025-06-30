@@ -8,6 +8,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.tabs.TabLayout
 import androidx.activity.viewModels
+import se.umu.cs.ens20vck.lab1_thirtythrows.fragments.PlayFragment
+import se.umu.cs.ens20vck.lab1_thirtythrows.fragments.ResultFragment
+import se.umu.cs.ens20vck.lab1_thirtythrows.viewModels.StorageViewModel
 
 /**
  * Main activity, that hosts the Play and Result fragments,
