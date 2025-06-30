@@ -17,7 +17,7 @@
     <string name="currThrows_text">Throws per round: 2&#10;Total amount of throws: %1$d</string>
     <string name="resultTitle_text">Results</string>
     <string name="rules_text">• Six dice are rolled once to start each round.\n• Re-roll any number of dice up to two more times.\n• After your second roll, pick how to score.\n• A game has 10 rounds, up to 30 rolls total.\n</string>
-    <string name="app_rules_text">• The game automatically starts the first roll after each round.\n• Press dice to mark them for re-rolling.\n• Groups are created by selecting one or more dice after the last roll.\n• Each group needs to be saved individually, press the lock-button after you\'ve selected a group.\n</string>
+    <string name="app_rules_text">• The game automatically starts the first roll after each round.\n• Press dice to mark them for re-rolling.\n• Groups are created by selecting one or more dice after the last roll.\n• Each group needs to be saved individually, press the lock-button after you\'ve selected a group.\n• Results are shown after a full game has been played. \n</string>
     <string name="results_table_header">Game %1$d</string>
     <string name="results_round_text">Round %1$d</string>
 </resources>
