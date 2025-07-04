@@ -1,7 +1,6 @@
 package se.umu.cs.ens20vck.lab1_thirtythrows.fragments
 
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -152,7 +151,6 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
         }
         // Observe changes in the dice list and re-render the dice grid when needed.
         diceViewModel.diceList.observe(viewLifecycleOwner){ diceList ->
-            Log.d("PlayFragment", "Dice list updated: $diceList")
             addDicesToGrid(view, diceList)
         }
     }
@@ -167,6 +165,7 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
         val overlay:FrameLayout = view.findViewById(R.id.gameOverlay)
         val startButton: Button =  view.findViewById(R.id.startGameButton)
         val gameStarted = storageViewModel.startFlag.value
+        // Hide the overlay if the game has been started previously
         if(gameStarted == true){
             overlay.visibility = View.GONE
         } else {
