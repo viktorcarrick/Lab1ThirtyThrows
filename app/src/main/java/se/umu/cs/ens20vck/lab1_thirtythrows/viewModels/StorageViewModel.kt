@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import se.umu.cs.ens20vck.lab1_thirtythrows.dataModels.Round
+import kotlin.math.round
 
 /**
  * ViewModel class that acts as a shared storage across the application.
@@ -53,6 +54,7 @@ class StorageViewModel(private val storedState: SavedStateHandle): ViewModel() {
      */
     fun clearChoices(){
         usedChoices.clear()
+        storedState["usedChoices"] = usedChoices
     }
 
     /**
@@ -105,6 +107,7 @@ class StorageViewModel(private val storedState: SavedStateHandle): ViewModel() {
      */
     fun clearRounds(){
         roundList.clear()
+        storedState["roundList"] = roundList
     }
 
     /**
