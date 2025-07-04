@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TableLayout
 import android.widget.TableRow
@@ -79,6 +80,7 @@ class ResultFragment : Fragment() {
             tableContainer.addView(tableLayout)
         }
 
+        setupPlayButton(view)
 
     }
 
@@ -159,4 +161,18 @@ class ResultFragment : Fragment() {
         tableLayout.addView(sumRow)
     }
 
+    /**
+     * Sets up the "Play again" button. Starts the Play-fragment
+     * when pressed.
+     *
+     * @param view - the root view of the fragment.
+     */
+    private fun setupPlayButton(view:View){
+        val replayButton: Button = view.findViewById(R.id.playAgainButton)
+        replayButton.setOnClickListener {
+            requireActivity().supportFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, PlayFragment())
+                .commit()
+        }
+    }
 }

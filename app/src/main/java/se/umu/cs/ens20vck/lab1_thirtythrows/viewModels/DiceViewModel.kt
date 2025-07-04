@@ -1,7 +1,9 @@
 package se.umu.cs.ens20vck.lab1_thirtythrows.viewModels
 
+import android.widget.TextView.SavedState
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import se.umu.cs.ens20vck.lab1_thirtythrows.dataModels.Die
 
@@ -12,21 +14,24 @@ import se.umu.cs.ens20vck.lab1_thirtythrows.dataModels.Die
  *
  * @author Viktor Carrick (ens20vck@cs.umu.se)
  */
-class DiceViewModel: ViewModel() {
+class DiceViewModel(private val savedState:SavedStateHandle): ViewModel() {
     // Mutable live data list of dice
-    private val _diceList = MutableLiveData<List<Die>>()
+    private val _diceList = savedState.getLiveData<List<Die>>("diceList")
 
     // Immutable list of dice for observation
     val diceList: LiveData<List<Die>> = _diceList
 
     // Initiates the list of dice, assigns a value and unique id for each die
     init {
-        val initDiceList = mutableListOf<Die>()
-        for(i in 1..6){
-            val dice = Die(id = i,value = i)
-            initDiceList.add(dice)
+        if(savedState.get<List<Die>>("diceList") == null) {
+            val initDiceList = mutableListOf<Die>()
+            for (i in 1..6) {
+                val dice = Die(id = i, value = i)
+                initDiceList.add(dice)
+            }
+            _diceList.value = initDiceList
+            savedState["diceList"] = initDiceList
         }
-        _diceList.value = initDiceList
     }
 
     /**
@@ -42,6 +47,7 @@ class DiceViewModel: ViewModel() {
             )
         }
         _diceList.value = updatedDiceList
+        savedState["diceList"] = updatedDiceList
     }
 
     /**
@@ -59,6 +65,7 @@ class DiceViewModel: ViewModel() {
             } else { die }
         }
         _diceList.value = updatedSelectedDiceList
+        savedState["diceList"] = updatedSelectedDiceList
     }
 
     /**
@@ -80,6 +87,7 @@ class DiceViewModel: ViewModel() {
             } else { die }
         }
         _diceList.value = updateDiceList
+        savedState["diceList"] = updateDiceList
     }
 
     /**
@@ -93,6 +101,7 @@ class DiceViewModel: ViewModel() {
             else { die }
         }
         _diceList.value = updateDiceList
+        savedState["diceList"] = updateDiceList
     }
 
     /**
@@ -106,6 +115,7 @@ class DiceViewModel: ViewModel() {
             else { die }
         }
         _diceList.value = updateDiceList
+        savedState["diceList"] = updateDiceList
     }
 
     /**
@@ -120,15 +130,18 @@ class DiceViewModel: ViewModel() {
             else die
         }
         _diceList.value = updateDiceList
+        savedState["diceList"] = updateDiceList
     }
 
     /**
      * Resets all dice by clearing their selected and paired states.
      */
     fun resetAllDice(){
-        _diceList.value = _diceList.value.orEmpty().map { die ->
+        val clearedList = _diceList.value.orEmpty().map { die ->
             die.copy(isSelected = false, isPaired = false)
         }
+        _diceList.value = clearedList
+        savedState["diceList"] = clearedList
     }
 
     fun togglePairedState(targetDie: Die){
@@ -137,5 +150,6 @@ class DiceViewModel: ViewModel() {
             else { die }
         }
         _diceList.value = updateDiceList
+        savedState["diceList"] = updateDiceList
     }
 }

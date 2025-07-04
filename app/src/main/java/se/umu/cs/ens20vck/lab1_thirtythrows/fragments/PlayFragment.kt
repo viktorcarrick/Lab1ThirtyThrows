@@ -1,6 +1,7 @@
 package se.umu.cs.ens20vck.lab1_thirtythrows.fragments
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -104,6 +105,7 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
         storageViewModel.clearRounds()
         storageViewModel.resetRoundCounter()
         storageViewModel.clearChoices()
+        storageViewModel.endGame()
 
         throwCounter = 0
         totThrowCounter = 0
@@ -115,7 +117,7 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
     }
 
     /**
-     * Sets up the UI elements and their intial states.
+     * Sets up the UI elements and their initial states.
      */
     private fun setupUI(view:View){
         initOverlay(view)
@@ -150,6 +152,7 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
         }
         // Observe changes in the dice list and re-render the dice grid when needed.
         diceViewModel.diceList.observe(viewLifecycleOwner){ diceList ->
+            Log.d("PlayFragment", "Dice list updated: $diceList")
             addDicesToGrid(view, diceList)
         }
     }
@@ -163,10 +166,18 @@ class PlayFragment : Fragment(R.layout.fragment_play) {
     private fun initOverlay(view:View){
         val overlay:FrameLayout = view.findViewById(R.id.gameOverlay)
         val startButton: Button =  view.findViewById(R.id.startGameButton)
+        val gameStarted = storageViewModel.startFlag.value
+        if(gameStarted == true){
+            overlay.visibility = View.GONE
+        } else {
+            overlay.visibility = View.VISIBLE
+        }
+
 
         startButton.setOnClickListener {
             overlay.visibility = View.GONE
             diceViewModel.rollAllDice()
+            storageViewModel.startGame()
 
         }
     }

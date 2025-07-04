@@ -2,6 +2,7 @@ package se.umu.cs.ens20vck.lab1_thirtythrows.viewModels
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import se.umu.cs.ens20vck.lab1_thirtythrows.dataModels.Round
 
@@ -11,22 +12,27 @@ import se.umu.cs.ens20vck.lab1_thirtythrows.dataModels.Round
  *
  * @author Viktor Carrick (ens20vck@cs.umu.se)
  */
-class StorageViewModel: ViewModel() {
+class StorageViewModel(private val storedState: SavedStateHandle): ViewModel() {
     // Set to store previously selected scoring choices
-    private val usedChoices = mutableSetOf<String>()
+    private val usedChoices = storedState.get<Set<String>>("usedChoices")?.toMutableSet() ?: mutableSetOf()
 
     // List to keep track of rounds played in the current game
-    private val roundList = mutableListOf<Round>()
+    private val roundList = storedState.get<List<Round>>("roundList")?.toMutableList() ?: mutableListOf()
 
     // List of complete games (each game is a list of rounds)
     private val gameList = mutableListOf<List<Round>>()
 
     // Mutable live data to track the current round number
-    private val _roundCounter = MutableLiveData(1)
+    private val _roundCounter = storedState.getLiveData("roundCounter",1)
 
     // Immutable public live data for observing the round number
     val roundCounter: LiveData<Int> get() = _roundCounter
 
+    // Mutable live data flag to indicate that a game has been started
+    private val _startFlag = storedState.getLiveData("startFlag",false)
+
+    // Immutable public flag for observing the state
+    val startFlag: LiveData<Boolean> get() = _startFlag
     /**
      * @return - A copy of the list of used scoring choices
      */
@@ -39,6 +45,7 @@ class StorageViewModel: ViewModel() {
      */
     fun addChoice(string: String){
         usedChoices.add(string)
+        storedState["usedChoices"] = usedChoices
     }
 
     /**
@@ -60,6 +67,7 @@ class StorageViewModel: ViewModel() {
      */
     fun addRound(round: Round){
         roundList.add(round)
+        storedState["roundList"] = roundList
     }
 
     /**
@@ -80,14 +88,16 @@ class StorageViewModel: ViewModel() {
      * Increments the current round counter by one.
      */
     fun incrementRoundCounter(){
-        _roundCounter.value = (_roundCounter.value?:1) +1
+        val current = storedState["roundCounter"] ?: 1
+        storedState["roundCounter"] = current + 1
+
     }
 
     /**
      * Resets the round counter to 1
      */
     fun resetRoundCounter(){
-        _roundCounter.value = 1
+        storedState["roundCounter"] = 1
     }
 
     /**
@@ -95,5 +105,21 @@ class StorageViewModel: ViewModel() {
      */
     fun clearRounds(){
         roundList.clear()
+    }
+
+    /**
+     * Sets the flag to true on game start
+     */
+    fun startGame(){
+        _startFlag.value = true
+        storedState["startFlag"] = true
+    }
+
+    /**
+     * Resets the flag when the game ends
+     */
+    fun endGame(){
+        _startFlag.value = false
+        storedState["startFlag"] = false
     }
 }

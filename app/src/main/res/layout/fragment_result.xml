@@ -23,4 +23,13 @@
             android:layout_height="wrap_content"
             android:orientation="vertical" />
     </ScrollView>
+
+    <Button
+        android:id="@+id/playAgainButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Play again!"
+        android:layout_gravity="bottom|center"
+        android:layout_margin="16dp"
+        />
 </FrameLayout>
